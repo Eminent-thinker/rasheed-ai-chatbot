@@ -3,7 +3,7 @@ import { Send, Bot, User } from 'lucide-react';
 
 export default function Chatbot() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hello! I'm Rasheed, your AI assistant. How can I help you today?" }
+    { role: 'assistant', content: 'Hello! I\'m your AI assistant. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,8 +34,10 @@ export default function Chatbot() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: 'You are Rasheed, a helpful and friendly AI assistant.',
-          messages: messages.map(m => ({ role: m.role, content: m.content })).concat([{ role: 'user', content: userMessage }]),
+          messages: [
+            ...messages.map(m => ({ role: m.role, content: m.content })),
+            { role: 'user', content: userMessage }
+          ],
         }),
       });
 
@@ -64,19 +66,21 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-emerald-50 to-teal-100">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
       <div className="bg-white shadow-md px-6 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="bg-teal-600 p-2 rounded-lg">
+          <div className="bg-indigo-600 p-2 rounded-lg">
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Rasheed AI</h1>
-            <p className="text-sm text-gray-500">Your intelligent assistant</p>
+            <h1 className="text-xl font-bold text-gray-800">AI Chatbot</h1>
+            <p className="text-sm text-gray-500">Powered by Claude</p>
           </div>
         </div>
       </div>
 
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.map((msg, idx) => (
           <div
@@ -84,7 +88,7 @@ export default function Chatbot() {
             className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
             <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-              msg.role === 'user' ? 'bg-teal-600' : 'bg-gray-300'
+              msg.role === 'user' ? 'bg-indigo-600' : 'bg-gray-300'
             }`}>
               {msg.role === 'user' ? (
                 <User className="w-5 h-5 text-white" />
@@ -95,7 +99,7 @@ export default function Chatbot() {
             <div
               className={`max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl px-4 py-3 rounded-2xl ${
                 msg.role === 'user'
-                  ? 'bg-teal-600 text-white'
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-white text-gray-800 shadow-sm'
               }`}
             >
@@ -120,6 +124,7 @@ export default function Chatbot() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input */}
       <div className="bg-white border-t border-gray-200 px-4 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-2">
@@ -130,12 +135,12 @@ export default function Chatbot() {
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
               disabled={isLoading}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleSubmit}
               disabled={isLoading || !input.trim()}
-              className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-5 h-5" />
             </button>
