@@ -216,7 +216,17 @@
         <div class="messages" id="messages"></div>
 
         <div class="input-area">
-            <div class="input-container">
+            <div class="input-container" id="apiKeyContainer" style="margin-bottom: 0.5rem;">
+                <input 
+                    type="password" 
+                    id="apiKeyInput" 
+                    class="input-field" 
+                    placeholder="Enter your Anthropic API key..."
+                    style="flex: 1;"
+                />
+                <button id="saveKeyButton" class="send-button">Save Key</button>
+            </div>
+            <div class="input-container" id="chatContainer" style="display: none;">
                 <input 
                     type="text" 
                     id="messageInput" 
@@ -225,6 +235,7 @@
                 />
                 <button id="sendButton" class="send-button">Send</button>
             </div>
+            <p id="keyStatus" style="text-align: center; font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;"></p>
         </div>
     </div>
 
@@ -232,13 +243,28 @@
         const messagesEl = document.getElementById('messages');
         const inputEl = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendButton');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveKeyBtn = document.getElementById('saveKeyButton');
+        const apiKeyContainer = document.getElementById('apiKeyContainer');
+        const chatContainer = document.getElementById('chatContainer');
+        const keyStatus = document.getElementById('keyStatus');
 
         const state = {
             messages: [
                 { role: 'assistant', content: "Hello! I'm Rasheed, your AI assistant. How can I help you today?" }
             ],
-            isLoading: false
+            isLoading: false,
+            apiKey: ''
         };
+
+        // Check for saved API key
+        const savedKey = localStorage.getItem('anthropic_api_key');
+        if (savedKey) {
+            state.apiKey = savedKey;
+            apiKeyContainer.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            keyStatus.textContent = 'API key loaded ✓';
+        }
 
         function createIcon(role) {
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -322,6 +348,23 @@
             messagesEl.scrollTop = messagesEl.scrollHeight;
         }
 
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            if (!key) {
+                keyStatus.textContent = 'Please enter a valid API key';
+                keyStatus.style.color = '#dc2626';
+                return;
+            }
+
+            state.apiKey = key;
+            localStorage.setItem('anthropic_api_key', key);
+            apiKeyContainer.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            keyStatus.textContent = 'API key saved ✓';
+            keyStatus.style.color = '#059669';
+            inputEl.focus();
+        }
+
         async function sendMessage() {
             const text = inputEl.value.trim();
             if (!text || state.isLoading) return;
@@ -336,7 +379,11 @@
             try {
                 const response = await fetch('https://api.anthropic.com/v1/messages', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-api-key': state.apiKey,
+                        'anthropic-version': '2023-06-01'
+                    },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
                         max_tokens: 1000,
@@ -345,11 +392,16 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
                 const data = await response.json();
                 const reply = data.content.filter(c => c.type === 'text').map(c => c.text).join('\n');
                 state.messages.push({ role: 'assistant', content: reply });
             } catch (err) {
-                state.messages.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' });
+                state.messages.push({ role: 'assistant', content: 'Sorry, I encountered an error. Please check your API key and try again.' });
+                console.error('Error:', err);
             }
 
             state.isLoading = false;
@@ -358,6 +410,11 @@
             render();
             inputEl.focus();
         }
+
+        saveKeyBtn.addEventListener('click', saveApiKey);
+        apiKeyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveApiKey();
+        });
 
         sendBtn.addEventListener('click', sendMessage);
         inputEl.addEventListener('keypress', (e) => {
